@@ -11,4 +11,10 @@ def update_status(report_id: str, status: str):
 
 @router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...)):
-    return {"filename": file.filename}
+    return {"filename": file.filename,
+            "ai_result": {
+                "category": "waste",
+                "urgency": "high",
+                "best_ngo": "Clean City NGO",
+                "matched_volunteers": 5
+            }}
