@@ -1,27 +1,41 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from app.database.supabase_client import supabase
 
 router = APIRouter()
-
-# TEMP DB (later replace with real DB)
-users_db = []
 
 class User(BaseModel):
     email: str
     password: str
-    role: str  # user / ngo / volunteer
+    role: str
 
 
 @router.post("/signup")
 def signup(user: User):
-    users_db.append(user.dict())
+    res = supabase.table("users").insert({
+        "email": user.email,
+        "password": user.password,
+        "role": user.role,
+        "name": "temp",
+        "location": "temp"
+    }).execute()
+
     return {"message": "User created successfully"}
 
 
 @router.post("/login")
 def login(user: User):
-    for u in users_db:
-        if u["email"] == user.email and u["password"] == user.password:
-            return {"message": "Login success", "role": u["role"]}
-    
-    return {"error": "Invalid credentials"}
+    res = supabase.table("users").select("*").eq("email", user.email).execute()
+
+    if len(res.data) == 0:
+        return {"error": "User not found"}
+
+    db_user = res.data[0]
+
+    if db_user["password"] != user.password:
+        return {"error": "Invalid password"}
+
+    return {
+        "message": "Login success",
+        "role": db_user["role"]
+    }
