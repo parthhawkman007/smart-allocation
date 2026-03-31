@@ -4,15 +4,24 @@ from app.database.supabase_client import supabase
 
 router = APIRouter()
 
+
 class User(BaseModel):
     email: str
     password: str
     role: str
 
 
+# 🔥 SIGNUP
 @router.post("/signup")
 def signup(user: User):
-    res = supabase.table("users").insert({
+    # ✅ CHECK IF USER ALREADY EXISTS
+    existing = supabase.table("users").select("*").eq("email", user.email).execute()
+
+    if existing.data:
+        return {"error": "User already exists"}
+
+    # ✅ INSERT NEW USER
+    supabase.table("users").insert({
         "email": user.email,
         "password": user.password,
         "role": user.role,
@@ -23,6 +32,7 @@ def signup(user: User):
     return {"message": "User created successfully"}
 
 
+# 🔥 LOGIN
 @router.post("/login")
 def login(user: User):
     res = supabase.table("users").select("*").eq("email", user.email).execute()
@@ -32,6 +42,7 @@ def login(user: User):
 
     db_user = res.data[0]
 
+    # ✅ PASSWORD CHECK
     if db_user["password"] != user.password:
         return {"error": "Invalid password"}
 
