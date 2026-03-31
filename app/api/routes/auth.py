@@ -27,7 +27,7 @@ def signup(user: User):
 def login(user: User):
     res = supabase.table("users").select("*").eq("email", user.email).execute()
 
-    if len(res.data) == 0:
+    if not res.data:
         return {"error": "User not found"}
 
     db_user = res.data[0]
